@@ -1,0 +1,33 @@
+[Buildset]
+BuildItems=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x00)
+
+[CMake]
+Build Directory Count=1
+Current Build Directory Index-Host System=0
+
+[CMake][CMake Build Directory 0]
+Build Directory Path=/data/building/hft-practices
+Build Type=Release
+CMake Binary=/usr/bin/cmake
+CMake Executable=/usr/bin/cmake
+Environment Profile=
+Extra Arguments=
+Install Directory=/tmp/hft-practices
+Runtime=Host System
+
+[Cppcheck]
+extraParameters=-std=c++20
+
+[CustomDefinesAndIncludes][ProjectPath0]
+Path=.
+parseAmbiguousAsCPP=true
+parserArguments=-ferror-limit=100 -fspell-checking -Wdocumentation -Wunused-parameter -Wunreachable-code -Wall -std=c++2a
+parserArgumentsC=-ferror-limit=100 -fspell-checking -Wdocumentation -Wunused-parameter -Wunreachable-code -Wall -std=c99
+parserArgumentsCuda=-ferror-limit=100 -fspell-checking -Wdocumentation -Wunused-parameter -Wunreachable-code -Wall -std=c++11
+parserArgumentsOpenCL=-ferror-limit=100 -fspell-checking -Wdocumentation -Wunused-parameter -Wunreachable-code -Wall -cl-std=CL1.1
+
+[CustomDefinesAndIncludes][ProjectPath0][Compiler]
+Name=g++9
+
+[Project]
+VersionControlSupport=kdevgit
