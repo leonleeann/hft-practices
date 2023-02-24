@@ -28,7 +28,7 @@ void ThreadProducer() {
 
 	Msg_u s_buf;
 	for( int j = 0; j < TOTAL_NOTES; ++j ) {
-		s_buf.send_time = steady_clock::now();
+		s_buf.post_time = steady_clock::now();
 		if( mq_send( mq, s_buf.as_buffer, sizeof( Msg_u ), 0 ) != 0 ) {
 			// 错误信息要先留存
 			string send_err = strerror( errno );
@@ -46,7 +46,7 @@ void ThreadProducer() {
 	cout << "producer:ended." << endl;
 };
 
-void threadConsumer() {
+void ThreadConsumer() {
 	mq_attr cfg {};
 //	cfg.mq_curmsgs = 0;
 //	cfg.mq_flags = O_CREAT | O_RDONLY | O_WRONLY;
@@ -73,7 +73,7 @@ void threadConsumer() {
 			return;
 		}
 
-		s_total_delay += recv_time - r_buf.send_time;
+		s_total_delay += recv_time - r_buf.post_time;
 		++s_recv_count;
 	}
 
@@ -83,7 +83,7 @@ void threadConsumer() {
 
 int main( void ) {
 	cout << "main:Hello!" << endl;
-	thread consumer = thread( threadConsumer );
+	thread consumer = thread( ThreadConsumer );
 	this_thread::sleep_for( 100ms );
 	cout << "Consumer has been started...";
 

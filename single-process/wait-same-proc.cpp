@@ -11,21 +11,23 @@ using namespace std::chrono;
 using namespace std::chrono_literals;
 using namespace std;
 
-steady_clock::time_point s_post_time {};
-atomic_bool				s_ready { false };
-
+atomic<steady_clock::time_point> s_post_time {};
 int						s_recv_count = 0;
 steady_clock::duration	s_total_delay {};
 
 void ThreadProducer() {
 	cout << "producer:started..." << endl;
 	int post_count = 0;
+	steady_clock::time_point last_post = steady_clock::now();
 	while( post_count < TOTAL_NOTES ) {
-		if( s_ready.load( memory_order_acquire ) )	// 消费者尚未处理完前一个通知
+		s_post_time.wait( last_post );
+		if( s_post_time.load( memory_order_acquire ) == last_post )
+			// 消费者尚未处理完前一个通知
 			continue;
 
-		s_post_time = steady_clock::now();
-		s_ready.store( true, memory_order_release );
+		last_post = steady_clock::now();
+		s_post_time.store( last_post, memory_order_release );
+		s_post_time.notify_one();
 		++post_count;
 		this_thread::sleep_for( SEND_INTERVEL );
 	}
@@ -34,19 +36,26 @@ void ThreadProducer() {
 
 void ThreadConsumer() {
 	cout << "consumer:started..." << endl;
-	while( s_recv_count < TOTAL_NOTES )
-		if( s_ready.load( memory_order_acquire ) ) {
-			auto recv_time = steady_clock::now();
-			s_total_delay += recv_time - s_post_time;
-			++s_recv_count;
-			s_ready.store( false, memory_order_release );
-		}
-// 		else this_thread::sleep_for( 1ns );
+	steady_clock::time_point last_recv {}, new_post {};
+	while( s_recv_count < TOTAL_NOTES ) {
+		s_post_time.wait( last_recv );
+		new_post = s_post_time.load( memory_order_acquire );
+		if( new_post == last_recv )
+			// 会有虚假唤醒吗?
+			continue;
+
+		last_recv = steady_clock::now();
+		s_total_delay += last_recv - new_post;
+		s_post_time.store( last_recv, memory_order_release );
+		s_post_time.notify_one();
+		++s_recv_count;
+	};
 	cout << "consumer:ended." << endl;
 };
 
 int main( void ) {
-	cout << "main:atomic busy check." << endl;
+	cout << "main:atomic<time_point> is lock free:" << s_post_time.is_lock_free()
+		 << endl;
 
 	thread consumer = thread( ThreadConsumer );
 	this_thread::sleep_for( 100ms );

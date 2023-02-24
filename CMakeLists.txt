@@ -35,11 +35,12 @@ include( GNUInstallDirs )
 
 set( THREADS_PREFER_PTHREAD_FLAG ON )
 find_package( Threads REQUIRED )
+find_package( rpclib REQUIRED )
 
 set( CMAKE_INCLUDE_CURRENT_DIR ON )
-include_directories( "." )
+include_directories( "includes" )
 
 ################################################################################
 
 add_subdirectory( "single-process" )
-# add_subdirectory( "multi-process" )
+add_subdirectory( "multi-process" )
