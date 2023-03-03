@@ -7,15 +7,12 @@
 
 #include "common.hpp"
 
-using namespace std::chrono;
-using namespace std::chrono_literals;
 using namespace std;
 
-steady_clock::time_point s_post_time {};
-atomic_bool				s_ready { false };
-
-int						s_recv_count = 0;
-steady_clock::duration	s_total_delay {};
+uint64_t	s_post_time {};
+uint64_t	s_total_delay {};
+int			s_recv_count {};
+atomic_bool	s_ready { false };
 
 void ThreadProducer() {
 	cout << "producer:started..." << endl;
@@ -24,7 +21,7 @@ void ThreadProducer() {
 		if( s_ready.load( memory_order_acquire ) )	// 消费者尚未处理完前一个通知
 			continue;
 
-		s_post_time = steady_clock::now();
+		s_post_time = rdtscp();
 		s_ready.store( true, memory_order_release );
 		++post_count;
 		this_thread::sleep_for( SEND_INTERVEL );
@@ -36,8 +33,7 @@ void ThreadConsumer() {
 	cout << "consumer:started..." << endl;
 	while( s_recv_count < TOTAL_NOTES )
 		if( s_ready.load( memory_order_acquire ) ) {
-			auto recv_time = steady_clock::now();
-			s_total_delay += recv_time - s_post_time;
+			s_total_delay += rdtscp() - s_post_time;
 			++s_recv_count;
 			s_ready.store( false, memory_order_release );
 		}
@@ -55,7 +51,7 @@ int main( void ) {
 	consumer.join();
 
 	cout << "msgs:" << s_recv_count
-		 << ", rate:" << s_total_delay.count() / double( s_recv_count ) << endl;
+		 << ", rate:" << s_total_delay / double( s_recv_count ) << endl;
 	return EXIT_SUCCESS;
 };
 // kate: indent-mode cstyle; indent-width 4; replace-tabs off; tab-width 4;

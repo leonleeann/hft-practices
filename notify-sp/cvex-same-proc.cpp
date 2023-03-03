@@ -8,17 +8,15 @@
 
 #include "common.hpp"
 
-using namespace std::chrono;
-using namespace std::chrono_literals;
 using namespace std;
 
-steady_clock::time_point s_post_time {};
 mutex					s_mutex;
 condition_variable		s_cv;
 bool					s_ready { false };
 
-int						s_recv_count = 0;
-steady_clock::duration	s_total_delay {};
+uint64_t	s_post_time {};
+uint64_t	s_total_delay {};
+int			s_recv_count = 0;
 
 void ThreadProducer() {
 	cout << "producer:started..." << endl;
@@ -29,7 +27,7 @@ void ThreadProducer() {
 			if( s_ready )	// 消费者尚未处理完前一个通知
 				continue;
 
-			s_post_time = steady_clock::now();
+			s_post_time = rdtscp();
 			s_ready = true;
 		}
 		s_cv.notify_one();
@@ -41,12 +39,16 @@ void ThreadProducer() {
 
 void ThreadConsumer() {
 	cout << "consumer:started..." << endl;
+	uint64_t recv_tsc;
 	while( s_recv_count < TOTAL_NOTES ) {
 		unique_lock<mutex> ulk( s_mutex );
 		s_cv.wait( ulk, []() { return s_ready; } );
+		// 先在第一时间获取时戳
+		recv_tsc = rdtscp();
+		if( !s_ready )	// 会不会有虚假唤醒呢?
+			continue;
 
-		auto recv_time = steady_clock::now();
-		s_total_delay += recv_time - s_post_time;
+		s_total_delay += recv_tsc - s_post_time;
 		++s_recv_count;
 		s_ready = false;
 		ulk.unlock();
@@ -55,7 +57,7 @@ void ThreadConsumer() {
 };
 
 int main( void ) {
-	cout << "main:Hello Conditional Var!" << endl;
+	cout << "main:Conditional Var in same process." << endl;
 
 	thread consumer = thread( ThreadConsumer );
 	this_thread::sleep_for( 100ms );
@@ -64,7 +66,7 @@ int main( void ) {
 	consumer.join();
 
 	cout << "msgs:" << s_recv_count
-		 << ", rate:" << s_total_delay.count() / double( s_recv_count ) << endl;
+		 << ", rate:" << s_total_delay / double( s_recv_count ) << endl;
 	return EXIT_SUCCESS;
 };
 // kate: indent-mode cstyle; indent-width 4; replace-tabs off; tab-width 4;

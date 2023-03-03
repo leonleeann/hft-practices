@@ -1,4 +1,3 @@
-// #include <atomic>
 #include <chrono>
 #include <cstring>
 #include <iomanip>
@@ -8,22 +7,17 @@
 
 #include "common.hpp"
 
-using namespace std::chrono;
-using namespace std::chrono_literals;
 using namespace std;
 
-// atomic<steady_clock::time_point> s_post_time { steady_clock::time_point { 0s } };
-steady_clock::time_point s_post_time {};
-sem_t	s_note_sem;
-
-int						s_recv_count = 0;
-steady_clock::duration	s_total_delay {};
+uint64_t	s_post_time {};
+uint64_t	s_total_delay {};
+int			s_recv_count = 0;
+sem_t		s_note_sem;
 
 void ThreadProducer() {
 	cout << "producer:started..." << endl;
 	for( int j = 0; j < TOTAL_NOTES; ++j ) {
-// 		s_post_time.store( steady_clock::now(), std::memory_order_release );
-		s_post_time = steady_clock::now();
+		s_post_time = rdtscp();
 		if( sem_post( &s_note_sem ) != 0 ) {
 			cerr << "producer:" << strerror( errno ) << endl;
 			break;
@@ -41,16 +35,14 @@ void ThreadConsumer() {
 			return;
 		}
 
-		auto recv_time = steady_clock::now();
-// 		s_total_delay += recv_time - s_post_time.load( std::memory_order_acquire );
-		s_total_delay += recv_time - s_post_time;
+		s_total_delay += rdtscp() - s_post_time;
 		++s_recv_count;
 	}
 	cout << "consumer:ended." << endl;
 };
 
 int main( void ) {
-	cout << "main:Hello!" << endl;
+	cout << "main:Semaphore in same process." << endl;
 	if( sem_init( &s_note_sem, 0, 0 ) != 0 ) {
 		cerr << "main:failed on create semaphore!" << endl;
 		return EXIT_FAILURE;
@@ -65,7 +57,7 @@ int main( void ) {
 	sem_destroy( &s_note_sem );
 
 	cout << "msgs:" << s_recv_count
-		 << ", rate:" << s_total_delay.count() / double( s_recv_count ) << endl;
+		 << ", rate:" << s_total_delay / double( s_recv_count ) << endl;
 	return EXIT_SUCCESS;
 };
 // kate: indent-mode cstyle; indent-width 4; replace-tabs off; tab-width 4;
