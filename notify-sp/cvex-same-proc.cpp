@@ -1,4 +1,3 @@
-#include <chrono>
 #include <condition_variable>
 #include <cstring>
 #include <iomanip>
@@ -14,12 +13,13 @@ mutex					s_mutex;
 condition_variable		s_cv;
 bool					s_ready { false };
 
-uint64_t	s_post_time {};
-uint64_t	s_total_delay {};
-int			s_recv_count = 0;
+uint64_t	s_post_time { 0 };
+uint64_t	s_total_delay { 0 };
+int			s_recv_count { 0 };
 
 void ThreadProducer() {
 	cout << "producer:started..." << endl;
+
 	int post_count = 0;
 	while( post_count < TOTAL_NOTES ) {
 		{
@@ -34,18 +34,21 @@ void ThreadProducer() {
 		++post_count;
 		this_thread::sleep_for( SEND_INTERVEL );
 	}
+
 	cout << "producer:ended." << endl;
 };
 
 void ThreadConsumer() {
 	cout << "consumer:started..." << endl;
+
 	uint64_t recv_tsc;
 	while( s_recv_count < TOTAL_NOTES ) {
 		unique_lock<mutex> ulk( s_mutex );
 		s_cv.wait( ulk, []() { return s_ready; } );
 		// 先在第一时间获取时戳
 		recv_tsc = rdtscp();
-		if( !s_ready )	// 会不会有虚假唤醒呢?
+		// 会不会有虚假唤醒呢?
+		if( !s_ready )
 			continue;
 
 		s_total_delay += recv_tsc - s_post_time;
@@ -53,6 +56,7 @@ void ThreadConsumer() {
 		s_ready = false;
 		ulk.unlock();
 	}
+
 	cout << "consumer:ended." << endl;
 };
 

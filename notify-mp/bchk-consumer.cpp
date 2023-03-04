@@ -1,5 +1,4 @@
 #include <atomic>
-#include <chrono>
 #include <cstring>
 #include <fcntl.h>		//O_RDONLY, S_IRUSR, S_IWUSR
 #include <iomanip>
@@ -11,8 +10,11 @@
 
 using namespace std;
 
+uint64_t		s_total_delay { 0 };
+int				s_recv_count { 0 };
+
 int main( void ) {
-	auto shm_fd = shm_open( SM_NAME, O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR );
+	auto shm_fd = shm_open( SHM_NAME, O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR );
 	if( shm_fd < 0 ) {
 		cerr << "consumer:shm_open error:" << shm_fd << endl;
 		exit( EXIT_FAILURE );
@@ -27,27 +29,28 @@ int main( void ) {
 		std::cerr << "consumer:mmap error:" << shm_pt;
 		exit( EXIT_FAILURE );
 	};
-	atomic_uint64_t* post_time = reinterpret_cast<atomic_uint64_t*>( shm_pt );
+	atomic_uint64_t* p_post_time = reinterpret_cast<atomic_uint64_t*>( shm_pt );
+	*p_post_time = 0;
 	cout << "consumer:shared memory created." << endl;
 
 	cout << "consumer:started..." << endl;
-	uint64_t	total_delay {}, last_post {}, new_post {};
-	int		recv_count = 0;
-	while( recv_count < TOTAL_NOTES ) {
-		new_post = post_time->load();
-		if( new_post == last_post )
+	uint64_t stamp = 0;
+	while( s_recv_count < TOTAL_NOTES ) {
+		stamp = p_post_time->load( memory_order_acquire );
+		if( stamp == 0 )
 			continue;
 
-		total_delay += rdtscp() - new_post;
-		last_post = new_post;
-		++recv_count;
+		s_total_delay += rdtscp() - stamp;
+		++s_recv_count;
+		p_post_time->store( 0, memory_order_release );
 	}
 	cout << "consumer:ended." << endl;
 
-	cout << "msgs:" << recv_count
-		 << ", rate:" << total_delay / double( recv_count ) << endl;
+	cout << "msgs:" << s_recv_count
+		 << ", rate:" << s_total_delay / double( s_recv_count ) << endl;
 
 	munmap( shm_pt, sizeof( atomic_uint64_t ) );
-	shm_unlink( SM_NAME );
+	shm_unlink( SHM_NAME );
 	return EXIT_SUCCESS;
 };
+// kate: indent-mode cstyle; indent-width 4; replace-tabs off; tab-width 4;

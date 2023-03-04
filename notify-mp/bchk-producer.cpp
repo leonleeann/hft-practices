@@ -13,7 +13,7 @@
 using namespace std;
 
 int main( void ) {
-	auto shm_fd = shm_open( SM_NAME, O_RDWR, S_IRUSR | S_IWUSR );
+	auto shm_fd = shm_open( SHM_NAME, O_RDWR, S_IRUSR | S_IWUSR );
 	if( shm_fd < 0 ) {
 		cerr << "producer:shm_open error:" << shm_fd << endl;
 		exit( EXIT_FAILURE );
@@ -28,16 +28,24 @@ int main( void ) {
 		std::cerr << "producer:mmap error:" << shm_pt;
 		exit( EXIT_FAILURE );
 	};
-	atomic_uint64_t* post_time = reinterpret_cast<atomic_uint64_t*>( shm_pt );
+	atomic_uint64_t* p_post_time = reinterpret_cast<atomic_uint64_t*>( shm_pt );
 	cout << "producer:shared memory created." << endl;
 
 	cout << "producer:started..." << endl;
-	for( int j = 0; j < TOTAL_NOTES; ++j ) {
-		post_time->store( rdtscp(), memory_order_release );
+	int post_count = 0;
+	while( post_count < TOTAL_NOTES ) {
+		// 消费者尚未处理完前一个通知
+		if( p_post_time->load( memory_order_acquire ) != 0 )
+			continue;
+
+		p_post_time->store( rdtscp(), memory_order_release );
+		++post_count;
 		this_thread::sleep_for( SEND_INTERVEL );
 	}
+
 	cout << "producer:ended." << endl;
 
 	munmap( shm_pt, sizeof( atomic_uint64_t ) );
 	return EXIT_SUCCESS;
 };
+// kate: indent-mode cstyle; indent-width 4; replace-tabs off; tab-width 4;

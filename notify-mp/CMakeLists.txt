@@ -12,15 +12,6 @@ add_executable( bchk-producer bchk-producer.cpp )
 target_link_libraries( bchk-producer rt )
 install(TARGETS bchk-producer RUNTIME DESTINATION . )
 
-######## Linux有名信号量 #############################################################
-add_executable( sem-consumer sem-consumer.cpp )
-target_link_libraries( sem-consumer rt Threads::Threads )
-install(TARGETS sem-consumer RUNTIME DESTINATION . )
-
-add_executable( sem-producer sem-producer.cpp )
-target_link_libraries( sem-producer rt Threads::Threads )
-install(TARGETS sem-producer RUNTIME DESTINATION . )
-
 ######## POSIX消息队列 ##############################################################
 add_executable( mq-consumer mq-consumer.cpp )
 target_link_libraries( mq-consumer rt )
@@ -38,6 +29,15 @@ install(TARGETS rpc-consumer RUNTIME DESTINATION . )
 add_executable( rpc-producer rpc-producer.cpp )
 target_link_libraries( rpc-producer rt Threads::Threads ${RPCLIB_LIBS} )
 install(TARGETS rpc-producer RUNTIME DESTINATION . )
+
+######## Linux有名信号量 #############################################################
+add_executable( sem-consumer sem-consumer.cpp )
+target_link_libraries( sem-consumer rt Threads::Threads )
+install(TARGETS sem-consumer RUNTIME DESTINATION . )
+
+add_executable( sem-producer sem-producer.cpp )
+target_link_libraries( sem-producer rt Threads::Threads )
+install(TARGETS sem-producer RUNTIME DESTINATION . )
 
 #[[####### atomic_wait #############################################################
 add_executable( wait-consumer wait-consumer.cpp )

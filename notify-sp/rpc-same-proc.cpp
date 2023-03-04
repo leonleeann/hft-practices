@@ -2,7 +2,6 @@
 #include <iostream>
 #include <rpc/client.h>
 #include <rpc/server.h>
-#include <string>
 #include <thread>
 
 #include "common.hpp"
@@ -37,3 +36,4 @@ int main() {
 		 << ", rate:" << s_total_delay / double( s_recv_count ) << endl;
 	return EXIT_SUCCESS;
 };
+// kate: indent-mode cstyle; indent-width 4; replace-tabs off; tab-width 4;

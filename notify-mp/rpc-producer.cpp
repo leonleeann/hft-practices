@@ -1,7 +1,6 @@
 #include <iomanip>
 #include <iostream>
 #include <rpc/client.h>
-#include <string>
 #include <thread>
 
 #include "common.hpp"
@@ -19,3 +18,4 @@ int main( void ) {
 
 	return EXIT_SUCCESS;
 };
+// kate: indent-mode cstyle; indent-width 4; replace-tabs off; tab-width 4;

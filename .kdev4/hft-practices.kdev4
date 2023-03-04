@@ -27,10 +27,22 @@ parserArgumentsCuda=-ferror-limit=100 -fspell-checking -Wdocumentation -Wunused-
 parserArgumentsOpenCL=-ferror-limit=100 -fspell-checking -Wdocumentation -Wunused-parameter -Wunreachable-code -Wall -cl-std=CL2.0
 
 [CustomDefinesAndIncludes][ProjectPath0][Compiler]
-Name=g++10
+Name=g++9
 
 [CustomDefinesAndIncludes][ProjectPath0][Includes]
 1=/data/projects/hft-practices/includes
 
 [Project]
 VersionControlSupport=kdevgit
+
+[SourceFormatter]
+ModelinesEnabled=true
+OverrideKateIndentation=true
+UseDefault=false
+text/x-c++hdr=kdevastyle||User1
+text/x-c++src=kdevastyle||User1
+text/x-chdr=kdevastyle||User1
+text/x-csharp=kdevastyle||1TBS
+text/x-csrc=kdevastyle||User1
+text/x-java=kdevastyle||1TBS
+text/x-objcsrc=kdevastyle||1TBS

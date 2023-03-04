@@ -1,5 +1,4 @@
 #include <atomic>
-#include <chrono>
 #include <iomanip>
 #include <iostream>
 #include <rpc/server.h>
@@ -30,3 +29,4 @@ int main( void ) {
 		 << ", rate:" << s_total_delay / double( s_recv_count.load() ) << endl;
 	return EXIT_SUCCESS;
 };
+// kate: indent-mode cstyle; indent-width 4; replace-tabs off; tab-width 4;
