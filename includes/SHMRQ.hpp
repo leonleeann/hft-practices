@@ -1,5 +1,4 @@
 #pragma once
-#include <cstddef>	// size_t
 #include <string>
 
 /* 一个基于共享内存可跨进程使用的无锁环状队列

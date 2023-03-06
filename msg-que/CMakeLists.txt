@@ -19,6 +19,10 @@ add_executable( shmrq-sp shmrq-sp.cpp )
 target_link_libraries( shmrq-sp objSHMRQ Threads::Threads rt )
 install(TARGETS shmrq-sp RUNTIME DESTINATION . )
 
+add_executable( test-shmrq test-shmrq.cpp )
+target_link_libraries( test-shmrq objSHMRQ Threads::Threads rt )
+install(TARGETS test-shmrq RUNTIME DESTINATION . )
+
 ######## SHMRQ Multi-Process #######################################################
 add_executable( shmrq-consumer shmrq-consumer.cpp )
 target_link_libraries( shmrq-consumer objSHMRQ Threads::Threads rt )
