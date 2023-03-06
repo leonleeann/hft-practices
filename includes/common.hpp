@@ -18,6 +18,7 @@ constexpr int		THREADS { 8 };
 
 constexpr uint16_t	RPC_PORT = 8888;
 
+constexpr char		SHQ_NAME[] = "/shm_ring_que";
 constexpr char		SHM_NAME[] = "/post_time";
 constexpr char		SEM_NAME[] = "/notify_sem";
 const std::string	RPC_NAME = "notify_rpc";
